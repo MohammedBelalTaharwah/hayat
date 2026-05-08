@@ -79,12 +79,12 @@ async function init() {
             <h3 class="font-h2 text-h2 text-on-surface mb-md">Recent Users</h3>
             ${(d.recentUsers || []).map(u => `
               <div class="flex items-center gap-md py-sm border-b border-surface-container-low last:border-0">
-                <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm">${u.name[0]}</div>
+                <div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-sm">${escapeHtml(u.name[0])}</div>
                 <div class="flex-1">
-                  <p class="font-body-sm font-semibold">${u.name}</p>
-                  <p class="text-body-sm text-on-surface-variant">${u.email}</p>
+                  <p class="font-body-sm font-semibold">${escapeHtml(u.name)}</p>
+                  <p class="text-body-sm text-on-surface-variant">${escapeHtml(u.email)}</p>
                 </div>
-                <span class="font-label-caps text-label-caps ${u.role === 'admin' ? 'bg-primary-fixed text-primary' : 'bg-surface-container text-on-surface-variant'} px-2 py-0.5 rounded-full">${u.role}</span>
+                <span class="font-label-caps text-label-caps ${u.role === 'admin' ? 'bg-primary-fixed text-primary' : 'bg-surface-container text-on-surface-variant'} px-2 py-0.5 rounded-full">${escapeHtml(u.role)}</span>
               </div>
             `).join('')}
           </div>
@@ -104,7 +104,7 @@ async function init() {
       </div>
     `;
   } catch (err) {
-    main.innerHTML = `<p class="text-error">Failed to load: ${err.message}</p>`;
+    main.innerHTML = `<p class="text-error">Failed to load: ${escapeHtml(err.message)}</p>`;
   }
 }
 document.addEventListener('DOMContentLoaded', init);

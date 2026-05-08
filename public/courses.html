@@ -48,10 +48,10 @@ async function init() {
           <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
             <div class="flex justify-between items-start mb-sm">
               <div>
-                <h3 class="font-h2 text-h2 text-on-surface">${c.title}</h3>
-                ${c.provider ? `<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">${c.provider}</p>` : ''}
+                <h3 class="font-h2 text-h2 text-on-surface">${escapeHtml(c.title)}</h3>
+                ${c.provider ? `<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">${escapeHtml(c.provider)}</p>` : ''}
               </div>
-              <span class="font-label-caps text-label-caps ${sc} px-sm py-xs rounded-full">${c.status}</span>
+              <span class="font-label-caps text-label-caps ${sc} px-sm py-xs rounded-full">${escapeHtml(c.status)}</span>
             </div>
             ${c.url ? `<a href="${c.url}" target="_blank" class="text-primary text-body-sm hover:underline flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">open_in_new</span> Open course</a>` : ''}
             <div class="mt-md">
@@ -126,7 +126,7 @@ async function init() {
         });
       });
     } catch (err) {
-      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+      main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
     }
   }
   load();

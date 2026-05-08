@@ -38,12 +38,12 @@ async function init() {
         <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
           <div class="flex justify-between items-start mb-sm">
             <div>
-              <h3 class="font-h2 text-h2 text-on-surface">${g.title}</h3>
-              ${g.description ? `<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">${g.description}</p>` : ''}
+              <h3 class="font-h2 text-h2 text-on-surface">${escapeHtml(g.title)}</h3>
+              ${g.description ? `<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">${escapeHtml(g.description)}</p>` : ''}
             </div>
-            <span class="font-label-caps text-label-caps bg-primary-fixed text-primary px-sm py-xs rounded-full">${g.category || 'personal'}</span>
+            <span class="font-label-caps text-label-caps bg-primary-fixed text-primary px-sm py-xs rounded-full">${escapeHtml(g.category) || 'personal'}</span>
           </div>
-          ${g.target_date ? `<p class="font-body-sm text-body-sm text-on-surface-variant mb-sm"><span class="material-symbols-outlined text-[16px] align-text-bottom">event</span> Target: ${g.target_date}</p>` : ''}
+          ${g.target_date ? `<p class="font-body-sm text-body-sm text-on-surface-variant mb-sm"><span class="material-symbols-outlined text-[16px] align-text-bottom">event</span> Target: ${escapeHtml(g.target_date)}</p>` : ''}
           <div class="flex items-center gap-md mt-md">
             <div class="flex-1 bg-surface-container h-2 rounded-full overflow-hidden">
               <div class="bg-primary h-full rounded-full transition-all" style="width: ${g.progress}%"></div>
@@ -93,7 +93,7 @@ async function init() {
         });
       });
     } catch (err) {
-      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+      main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
     }
   }
   load();

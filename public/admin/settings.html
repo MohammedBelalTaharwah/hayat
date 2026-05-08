@@ -38,15 +38,15 @@ async function init() {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
             <div>
               <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Name</span>
-              <p class="font-body-main">${d.admin.name}</p>
+              <p class="font-body-main">${escapeHtml(d.admin.name)}</p>
             </div>
             <div>
               <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Email</span>
-              <p class="font-body-main">${d.admin.email}</p>
+              <p class="font-body-main">${escapeHtml(d.admin.email)}</p>
             </div>
             <div>
               <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Role</span>
-              <p class="font-body-main">${d.admin.role}</p>
+              <p class="font-body-main">${escapeHtml(d.admin.role)}</p>
             </div>
             <div>
               <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Since</span>
@@ -94,7 +94,7 @@ async function init() {
       </div>
     `;
   } catch (err) {
-    main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+    main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
   }
 }
 document.addEventListener('DOMContentLoaded', init);

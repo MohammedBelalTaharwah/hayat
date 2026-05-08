@@ -44,6 +44,12 @@ const API = {
   }
 };
 
+function escapeHtml(str) {
+  if (typeof str !== 'string' && typeof str !== 'number') return '';
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;' };
+  return String(str).replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
 function requireAuth() {
   if (!API.isLoggedIn() && !window.location.pathname.includes('sign-in') && !window.location.pathname.includes('create-account') && !window.location.pathname.includes('forgot-password') && window.location.pathname !== '/' && !window.location.pathname.endsWith('index.html')) {
     window.location.href = '/sign-in.html';

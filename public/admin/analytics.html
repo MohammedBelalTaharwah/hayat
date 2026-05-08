@@ -45,7 +45,7 @@ async function init() {
           ${statsCards.map(s => `
             <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
               <div class="flex justify-between items-start mb-sm">
-                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">${s.label}</span>
+                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">${escapeHtml(s.label)}</span>
                 <span class="material-symbols-outlined ${s.color}">${s.icon}</span>
               </div>
               <div class="font-display-lg text-display-lg text-on-surface">${s.value}</div>
@@ -99,8 +99,8 @@ async function init() {
                 ${(d.topUsers || []).map((u, i) => `
                   <tr class="border-b border-surface-container-low hover:bg-surface-bright">
                     <td class="p-md font-bold">${i + 1}</td>
-                    <td class="p-md">${u.name}</td>
-                    <td class="p-md text-on-surface-variant">${u.email}</td>
+                    <td class="p-md">${escapeHtml(u.name)}</td>
+                    <td class="p-md text-on-surface-variant">${escapeHtml(u.email)}</td>
                     <td class="p-md">${u.tasks}</td>
                     <td class="p-md">${u.habits}</td>
                     <td class="p-md">${u.moods}</td>
@@ -115,7 +115,7 @@ async function init() {
       </div>
     `;
   } catch (err) {
-    main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+    main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
   }
 }
 document.addEventListener('DOMContentLoaded', init);

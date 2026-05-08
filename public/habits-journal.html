@@ -59,7 +59,7 @@ async function init() {
                   <span class="material-symbols-outlined">${iconMap[h.icon] || 'self_improvement'}</span>
                 </div>
                 <div>
-                  <h3 class="font-body-main text-body-main font-semibold">${h.name}</h3>
+                  <h3 class="font-body-main text-body-main font-semibold">${escapeHtml(h.name)}</h3>
                   <div class="font-label-caps text-label-caps text-on-surface-variant flex items-center gap-1 mt-1">🔥 ${h.streak || 0} days</div>
                 </div>
               </div>
@@ -76,11 +76,11 @@ async function init() {
           <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full bg-surface-container-highest border-2 border-background"></div>
           <div class="bg-surface-container-lowest p-4 rounded-xl border border-surface-container-low shadow-level-1 hover:shadow-md transition-shadow">
             <div class="flex justify-between items-start mb-2">
-              <h4 class="font-body-main text-body-main font-semibold text-on-background">${e.title || 'Untitled'}</h4>
+              <h4 class="font-body-main text-body-main font-semibold text-on-background">${escapeHtml(e.title) || 'Untitled'}</h4>
               <span class="font-body-sm text-body-sm text-on-surface-variant">${e.created_at ? new Date(e.created_at).toLocaleDateString() : ''}</span>
             </div>
-            <p class="font-body-sm text-body-sm text-on-surface truncate">${e.content || ''}</p>
-            ${e.mood_tag ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-secondary-container text-on-secondary-container mt-2">${e.mood_tag}</span>` : ''}
+            <p class="font-body-sm text-body-sm text-on-surface truncate">${escapeHtml(e.content) || ''}</p>
+            ${e.mood_tag ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-secondary-container text-on-secondary-container mt-2">${escapeHtml(e.mood_tag)}</span>` : ''}
           </div>
         </div>
       `).join('') || '<p class="text-body-sm text-on-surface-variant">No journal entries yet.</p>';
@@ -174,7 +174,7 @@ async function init() {
         load();
       });
     } catch (err) {
-      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+      main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
     }
   }
   load();

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard - Hayati | حياتي</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Cairo:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#6063ee",
+                        "surface-dim": "#d8dadc",
+                        "on-tertiary-fixed": "#301400",
+                        "tertiary-fixed": "#ffdcc5",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container": "#eceef0",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#dae2fd",
+                        "surface-bright": "#f7f9fb",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "on-surface-variant": "#464554",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary-fixed": "#dae2fd",
+                        "on-tertiary-container": "#fffbff",
+                        "inverse-surface": "#2d3133",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#b55d00",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#e1e0ff",
+                        "surface-variant": "#e0e3e5",
+                        "background": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#07006c",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#703700",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface": "#f7f9fb",
+                        "on-surface": "#191c1e",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#131b2e",
+                        "outline-variant": "#c7c4d7",
+                        "tertiary": "#904900",
+                        "secondary": "#565e74",
+                        "primary": "#4648d4",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-tint": "#494bd6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-background": "#191c1e",
+                        "on-secondary-container": "#5c647a",
+                        "outline": "#767586",
+                        "on-primary-container": "#fffbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xxl": "48px",
+                        "base": "4px",
+                        "xs": "4px",
+                        "sidebar_width": "280px",
+                        "xl": "32px",
+                        "container_max": "1280px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "rtl-h1": ["Cairo"],
+                        "rtl-body": ["Cairo"],
+                        "display-lg": ["Inter"],
+                        "h1": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "h2": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "rtl-h1": ["26px", { "lineHeight": "1.4", "fontWeight": "700" }],
+                        "rtl-body": ["16px", { "lineHeight": "1.7", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "h1": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .shadow-level-1 {
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-main antialiased h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="bg-inverse-surface dark:bg-inverse-surface fixed h-full w-sidebar_width start-0 top-0 flex flex-col py-lg px-md rtl:flex-row-reverse z-20 shadow-none">
+<div class="mb-xxl px-md">
+<h1 class="font-h1 text-h1 font-bold text-white rtl:font-rtl-h1 rtl:text-rtl-h1">Hayati | حياتي</h1>
+<p class="text-white/60 font-body-sm text-body-sm mt-xs">Personal Life Organizer</p>
+</div>
+<div class="flex-1 space-y-sm">
+<a class="flex items-center gap-md border-s-4 border-primary-container bg-white/10 text-white font-bold p-sm rounded-r-lg hover:bg-white/5 transition-all duration-200 active:scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200 active:scale-95 transition-transform border-s-4 border-transparent" href="#">
+<span class="material-symbols-outlined">checklist</span>
+<span>To-Do List</span>
+</a>
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200 active:scale-95 transition-transform border-s-4 border-transparent" href="#">
+<span class="material-symbols-outlined">emoji_events</span>
+<span>Goals</span>
+</a>
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200 active:scale-95 transition-transform border-s-4 border-transparent" href="#">
+<span class="material-symbols-outlined">school</span>
+<span>Courses</span>
+</a>
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200 active:scale-95 transition-transform border-s-4 border-transparent" href="#">
+<span class="material-symbols-outlined">timer</span>
+<span>Pomodoro</span>
+</a>
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200 active:scale-95 transition-transform border-s-4 border-transparent" href="#">
+<span class="material-symbols-outlined">mood</span>
+<span>Mood Log</span>
+</a>
+</div>
+<button class="mt-lg w-full bg-primary text-white font-h2 text-h2 py-sm px-md rounded-lg hover:bg-surface-tint hover:-translate-y-0.5 active:scale-95 transition-all duration-200 shadow-level-1">
+            Add New Entry
+        </button>
+<div class="mt-xl pt-lg border-t border-white/10 space-y-sm">
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-md text-white/60 hover:text-white p-sm rounded-lg hover:bg-white/5 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col ms-[280px] h-screen rtl:me-[280px] rtl:ms-0 overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-container docked full-width top-0 bg-surface dark:bg-surface-container-low shadow-sm flex justify-between items-center h-16 ps-lg pe-lg w-full z-10 shrink-0">
+<div class="flex items-center font-h2 text-h2 text-primary font-bold">
+                Dashboard <span class="text-on-surface-variant font-normal ml-sm text-body-main">/ Overview</span>
+</div>
+<div class="flex items-center gap-md">
+<button class="text-on-surface-variant hover:bg-surface-container-highest transition-colors p-sm rounded-full active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:bg-surface-container-highest transition-colors p-sm rounded-full active:opacity-80">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Scrollable Canvas -->
+<main class="flex-1 overflow-y-auto p-lg bg-surface">
+<div class="max-w-container_max mx-auto space-y-lg">
+<!-- Action Bar -->
+<div class="flex justify-between items-center mb-md">
+<div>
+<h2 class="font-h1 text-h1 text-on-surface">Welcome Back, Sara | مرحباً سارة</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">Here is your life at a glance for this week.</p>
+</div>
+<button class="flex items-center gap-sm px-md py-sm border border-primary text-primary rounded-lg font-h2 text-h2 hover:bg-primary hover:text-white transition-colors duration-200 bg-transparent">
+<span class="material-symbols-outlined text-[20px]">calendar_month</span>
+                        Weekly/Monthly Report
+                    </button>
+</div>
+<!-- Metric Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-md">
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Tasks Completed</span>
+<span class="material-symbols-outlined text-primary text-[20px]">task_alt</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-sm">24</div>
+<div class="flex items-center gap-xs mt-xs text-secondary font-body-sm text-body-sm">
+<span class="text-[#059669] flex items-center"><span class="material-symbols-outlined text-[16px]">arrow_upward</span> 12%</span>
+<span>vs last week</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Goals Progress</span>
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">trending_up</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-sm">68%</div>
+<div class="w-full bg-surface-container h-2 rounded-full mt-sm overflow-hidden">
+<div class="bg-tertiary-container h-full rounded-full" style="width: 68%"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Study Hours</span>
+<span class="material-symbols-outlined text-[#0284c7] text-[20px]">menu_book</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-sm">14.5</div>
+<div class="flex items-center gap-xs mt-xs text-secondary font-body-sm text-body-sm">
+<span class="text-error flex items-center"><span class="material-symbols-outlined text-[16px]">arrow_downward</span> 2h</span>
+<span>vs last week</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low flex flex-col">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Streak Days</span>
+<span class="material-symbols-outlined text-[#ea580c] text-[20px]">local_fire_department</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface mt-sm">12</div>
+<div class="flex items-center gap-xs mt-auto pt-sm text-secondary font-body-sm text-body-sm">
+<span>Keep it up!</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

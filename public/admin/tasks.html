@@ -82,8 +82,8 @@ async function init() {
                 <tbody id="tasks-body">
                   ${tasks.map(t => `
                     <tr class="border-b border-surface-container-low hover:bg-surface-bright transition-colors">
-                      <td class="p-md font-medium">${t.title}</td>
-                      <td class="p-md text-on-surface-variant">${t.user_name || 'Unknown'}</td>
+                      <td class="p-md font-medium">${escapeHtml(t.title)}</td>
+                      <td class="p-md text-on-surface-variant">${escapeHtml(t.user_name) || 'Unknown'}</td>
                       <td class="p-md"><span class="inline-flex px-2 py-0.5 rounded text-[10px] uppercase font-bold ${qColors[t.quadrant] || 'bg-surface-container text-on-surface-variant'}">${qLabels[t.quadrant] || t.quadrant}</span></td>
                       <td class="p-md"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${t.completed ? 'bg-[#d1fae5] text-[#065f46]' : 'bg-surface-container text-on-surface-variant'}">${t.completed ? 'Done' : 'Active'}</span></td>
                       <td class="p-md text-on-surface-variant">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
@@ -113,8 +113,8 @@ async function init() {
             const qc = qColors[t.quadrant] || 'bg-surface-container text-on-surface-variant';
             const ql = qLabels[t.quadrant] || t.quadrant;
             return `<tr class="border-b border-surface-container-low hover:bg-surface-bright transition-colors">
-              <td class="p-md font-medium">${t.title}</td>
-              <td class="p-md text-on-surface-variant">${t.user_name || 'Unknown'}</td>
+              <td class="p-md font-medium">${escapeHtml(t.title)}</td>
+              <td class="p-md text-on-surface-variant">${escapeHtml(t.user_name) || 'Unknown'}</td>
               <td class="p-md"><span class="inline-flex px-2 py-0.5 rounded text-[10px] uppercase font-bold ${qc}">${ql}</span></td>
               <td class="p-md"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${t.completed ? 'bg-[#d1fae5] text-[#065f46]' : 'bg-surface-container text-on-surface-variant'}">${t.completed ? 'Done' : 'Active'}</span></td>
               <td class="p-md text-on-surface-variant">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
@@ -130,7 +130,7 @@ async function init() {
       document.getElementById('quadrant-filter').addEventListener('change', filterTasks);
       document.getElementById('status-filter').addEventListener('change', filterTasks);
     } catch (err) {
-      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+      main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
     }
   }
   render();

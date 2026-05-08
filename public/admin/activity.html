@@ -51,7 +51,7 @@ async function init() {
                 <span class="material-symbols-outlined">${typeIcons[a.type] || 'info'}</span>
               </div>
               <div class="flex-1">
-                <p class="font-body-main text-body-main text-on-surface">${a.label || 'Unknown activity'}</p>
+                <p class="font-body-main text-body-main text-on-surface">${escapeHtml(a.label) || 'Unknown activity'}</p>
                 <p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">${new Date(a.time).toLocaleString()}</p>
               </div>
             </div>
@@ -69,7 +69,7 @@ async function init() {
       } catch {}
     });
   } catch (err) {
-    main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+    main.innerHTML = `<p class="text-error">Error: ${escapeHtml(err.message)}</p>`;
   }
 }
 document.addEventListener('DOMContentLoaded', init);

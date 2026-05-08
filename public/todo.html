@@ -39,10 +39,10 @@ function taskCard(task, quadrant, color, theme) {
     <div class="flex items-start gap-md p-sm hover:bg-surface-bright rounded-lg group/item border border-transparent hover:border-surface-container transition-all">
       <input type="checkbox" ${checked} class="task-check mt-1 rounded border-outline-variant ${c.text} ${c.ring} w-5 h-5 cursor-pointer" data-id="${task.id}" />
       <div class="flex-1">
-        <p class="font-body-main text-body-main font-semibold text-on-background ${textClass}">${task.title}</p>
-        ${task.due_time ? `<p class="font-body-sm text-body-sm ${c.text} flex items-center gap-xs mt-1"><span class="material-symbols-outlined text-[16px]">schedule</span>${task.due_time}</p>` : ''}
-        ${task.due_date ? `<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs mt-1"><span class="material-symbols-outlined text-[16px]">event</span>${task.due_date}</p>` : ''}
-        ${task.assigned_to ? `<div class="flex items-center gap-sm mt-2"><div class="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center text-[10px] text-primary font-bold">${task.assigned_to[0]}</div><span class="font-body-sm text-body-sm text-on-surface-variant">${task.assigned_to}</span></div>` : ''}
+        <p class="font-body-main text-body-main font-semibold text-on-background ${textClass}">${escapeHtml(task.title)}</p>
+        ${task.due_time ? `<p class="font-body-sm text-body-sm ${c.text} flex items-center gap-xs mt-1"><span class="material-symbols-outlined text-[16px]">schedule</span>${escapeHtml(task.due_time)}</p>` : ''}
+        ${task.due_date ? `<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-xs mt-1"><span class="material-symbols-outlined text-[16px]">event</span>${escapeHtml(task.due_date)}</p>` : ''}
+        ${task.assigned_to ? `<div class="flex items-center gap-sm mt-2"><div class="w-6 h-6 rounded-full bg-primary-fixed flex items-center justify-center text-[10px] text-primary font-bold">${escapeHtml(task.assigned_to[0])}</div><span class="font-body-sm text-body-sm text-on-surface-variant">${escapeHtml(task.assigned_to)}</span></div>` : ''}
       </div>
       <button class="task-delete text-outline-variant opacity-0 group-hover/item:opacity-100 hover:text-error transition-opacity" data-id="${task.id}">
         <span class="material-symbols-outlined">delete</span>
@@ -148,7 +148,7 @@ async function init() {
         });
       });
     } catch (err) {
-      main.innerHTML = `<p class="text-error">Error loading tasks: ${err.message}</p>`;
+      main.innerHTML = `<p class="text-error">Error loading tasks: ${escapeHtml(err.message)}</p>`;
     }
   }
 
