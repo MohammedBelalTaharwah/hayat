@@ -1,32 +1,30 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { getDB } = require('../database');
+const { db } = require('../database');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/', authenticate, (req, res) => {
-  const db = getDB();
+router.get('/', authenticate, async (req, res) => {
   const { days } = req.query;
-  const limit = days || 30;
-  const moods = db.prepare('SELECT * FROM mood_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?').all(req.userId, parseInt(limit));
+  const limit = parseInt(days) || 30;
+  const moods = await db.all('SELECT * FROM mood_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2', [req.userId, limit]);
   res.json({ moods });
 });
 
-router.post('/', authenticate, (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   const { mood, notes } = req.body;
   if (!mood) return res.status(400).json({ error: 'Mood required' });
-  const db = getDB();
   const today = new Date().toISOString().split('T')[0];
-  const existing = db.prepare('SELECT * FROM mood_logs WHERE user_id = ? AND date = ?').get(req.userId, today);
+  const existing = await db.get('SELECT * FROM mood_logs WHERE user_id = $1 AND date = $2', [req.userId, today]);
   if (existing) {
-    db.prepare('UPDATE mood_logs SET mood = ?, notes = ? WHERE id = ?').run(mood, notes || '', existing.id);
-    const updated = db.prepare('SELECT * FROM mood_logs WHERE id = ?').get(existing.id);
+    await db.query('UPDATE mood_logs SET mood = $1, notes = $2 WHERE id = $3', [mood, notes || '', existing.id]);
+    const updated = await db.get('SELECT * FROM mood_logs WHERE id = $1', [existing.id]);
     return res.json({ mood: updated });
   }
   const id = uuidv4();
-  db.prepare('INSERT INTO mood_logs (id, user_id, mood, notes, date) VALUES (?, ?, ?, ?, ?)').run(id, req.userId, mood, notes || '', today);
-  const entry = db.prepare('SELECT * FROM mood_logs WHERE id = ?').get(id);
+  await db.query('INSERT INTO mood_logs (id, user_id, mood, notes, date) VALUES ($1, $2, $3, $4, $5)', [id, req.userId, mood, notes || '', today]);
+  const entry = await db.get('SELECT * FROM mood_logs WHERE id = $1', [id]);
   res.json({ mood: entry });
 });
 

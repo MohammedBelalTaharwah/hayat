@@ -4,7 +4,7 @@ const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
-const { initDB } = require('./database');
+const { initDB, db } = require('./database');
 const { authenticate } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const tasksRoutes = require('./routes/tasks');
@@ -39,10 +39,8 @@ const globalLimiter = rateLimit({
 });
 app.use('/api/', globalLimiter);
 
-app.use('/admin', authenticate, (req, res, next) => {
-  const { getDB } = require('./database');
-  const db = getDB();
-  const user = db.prepare('SELECT role FROM users WHERE id = ?').get(req.userId);
+app.use('/admin', authenticate, async (req, res, next) => {
+  const user = await db.get('SELECT role FROM users WHERE id = $1', [req.userId]);
   if (!user || user.role !== 'admin') {
     return res.status(403).send('Admin access required');
   }
@@ -81,5 +79,13 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-initDB();
-app.listen(PORT, () => console.log(`Hayati running on http://localhost:${PORT}`));
+if (process.env.VERCEL) {
+  module.exports = app;
+} else {
+  initDB().then(() => {
+    app.listen(PORT, () => console.log(`Hayati running on http://localhost:${PORT}`));
+  }).catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  });
+}

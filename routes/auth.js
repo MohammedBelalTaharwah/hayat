@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const rateLimit = require('express-rate-limit');
 const validator = require('validator');
-const { getDB } = require('../database');
+const { db } = require('../database');
 const { authenticate, generateToken, generateRefreshToken, verifyRefreshToken, TOKEN_COOKIE_OPTS } = require('../middleware/auth');
 const { sendOTP, sendPasswordReset } = require('../email');
 
@@ -48,11 +48,12 @@ function setTokenCookies(res, token, refreshToken) {
 }
 
 function requireVerified(req, res, next) {
-  const db = getDB();
-  const user = db.prepare('SELECT verified FROM users WHERE id = ?').get(req.userId);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  if (!user.verified) return res.status(403).json({ error: 'Email not verified. Please verify your email first.' });
-  next();
+  (async () => {
+    const user = await db.get('SELECT verified FROM users WHERE id = $1', [req.userId]);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.verified) return res.status(403).json({ error: 'Email not verified. Please verify your email first.' });
+    next();
+  })();
 }
 
 router.post('/signup', authLimiter, async (req, res) => {
@@ -66,8 +67,7 @@ router.post('/signup', authLimiter, async (req, res) => {
     });
   }
 
-  const db = getDB();
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const existing = await db.get('SELECT id FROM users WHERE email = $1', [email]);
   if (existing) {
     return res.status(409).json({ error: 'Email already registered' });
   }
@@ -76,7 +76,7 @@ router.post('/signup', authLimiter, async (req, res) => {
   const id = uuidv4();
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  db.prepare('INSERT INTO users (id, name, email, password, otp, otp_expires) VALUES (?, ?, ?, ?, ?, ?)').run(id, name, email, hashed, otp, otpExpires);
+  await db.query('INSERT INTO users (id, name, email, password, otp, otp_expires) VALUES ($1, $2, $3, $4, $5, $6)', [id, name, email, hashed, otp, otpExpires]);
   await sendOTP(email, otp);
   const token = generateToken(id);
   const refreshToken = generateRefreshToken(id);
@@ -85,49 +85,46 @@ router.post('/signup', authLimiter, async (req, res) => {
   res.json({ token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.' });
 });
 
-router.post('/verify-otp', authenticate, otpLimiter, (req, res) => {
+router.post('/verify-otp', authenticate, otpLimiter, async (req, res) => {
   const { otp } = req.body;
   if (!otp || typeof otp !== 'string' || !/^\d{6}$/.test(otp)) {
     return res.status(400).json({ error: 'Valid 6-digit OTP required' });
   }
-  const db = getDB();
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  const user = await db.get('SELECT * FROM users WHERE id = $1', [req.userId]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   if (user.verified) return res.json({ message: 'Already verified' });
 
-  const attempts = db.prepare("SELECT COUNT(*) as count FROM users WHERE id = ? AND otp_attempts >= 3").get(req.userId);
-  if (attempts?.count > 0) {
+  const attempts = await db.get('SELECT otp_attempts FROM users WHERE id = $1', [req.userId]);
+  if (attempts && attempts.otp_attempts >= 3) {
     return res.status(429).json({ error: 'Too many attempts. Request a new OTP.' });
   }
 
   if (user.otp !== otp || new Date(user.otp_expires) < new Date()) {
-    db.prepare('UPDATE users SET otp_attempts = COALESCE(otp_attempts, 0) + 1 WHERE id = ?').run(req.userId);
+    await db.query('UPDATE users SET otp_attempts = COALESCE(otp_attempts, 0) + 1 WHERE id = $1', [req.userId]);
     return res.status(400).json({ error: 'Invalid or expired OTP' });
   }
 
-  db.prepare('UPDATE users SET verified = 1, otp = NULL, otp_expires = NULL, otp_attempts = NULL WHERE id = ?').run(req.userId);
+  await db.query('UPDATE users SET verified = 1, otp = NULL, otp_expires = NULL, otp_attempts = 0 WHERE id = $1', [req.userId]);
   res.json({ message: 'Email verified successfully' });
 });
 
 router.post('/resend-otp', authenticate, otpLimiter, async (req, res) => {
-  const db = getDB();
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
+  const user = await db.get('SELECT * FROM users WHERE id = $1', [req.userId]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   if (user.verified) return res.json({ message: 'Already verified' });
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  db.prepare('UPDATE users SET otp = ?, otp_expires = ?, otp_attempts = 0 WHERE id = ?').run(otp, otpExpires, req.userId);
+  await db.query('UPDATE users SET otp = $1, otp_expires = $2, otp_attempts = 0 WHERE id = $3', [otp, otpExpires, req.userId]);
   sendOTP(user.email, otp);
   res.json({ message: 'OTP resent' });
 });
 
-router.post('/login', authLimiter, (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body;
   if (!validateEmail(email) || !password) {
     return res.status(400).json({ error: 'Valid email and password required' });
   }
-  const db = getDB();
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const user = await db.get('SELECT * FROM users WHERE email = $1', [email]);
   if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
@@ -142,42 +139,39 @@ router.post('/forgot-password', otpLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
-  const db = getDB();
-  const user = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const user = await db.get('SELECT id FROM users WHERE email = $1', [email]);
   if (user) {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    db.prepare('UPDATE users SET otp = ?, otp_expires = ?, otp_attempts = 0 WHERE id = ?').run(otp, otpExpires, user.id);
+    await db.query('UPDATE users SET otp = $1, otp_expires = $2, otp_attempts = 0 WHERE id = $3', [otp, otpExpires, user.id]);
     sendPasswordReset(email, otp);
   }
 
   res.json({ message: 'If the email exists, a reset link has been sent' });
 });
 
-router.post('/reset-password', otpLimiter, (req, res) => {
+router.post('/reset-password', otpLimiter, async (req, res) => {
   const { email, otp, password } = req.body;
   if (!validateEmail(email) || !otp || !validatePassword(password)) {
     return res.status(400).json({ error: 'Valid email, 6-digit OTP, and password (8-128 chars) required' });
   }
-  const db = getDB();
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const user = await db.get('SELECT * FROM users WHERE email = $1', [email]);
   if (!user || user.otp !== otp || new Date(user.otp_expires) < new Date()) {
     return res.status(400).json({ error: 'Invalid or expired OTP' });
   }
   const hashed = bcrypt.hashSync(password, 10);
-  db.prepare('UPDATE users SET password = ?, otp = NULL, otp_expires = NULL WHERE id = ?').run(hashed, user.id);
+  await db.query('UPDATE users SET password = $1, otp = NULL, otp_expires = NULL WHERE id = $2', [hashed, user.id]);
   res.json({ message: 'Password reset successfully' });
 });
 
-router.post('/refresh', (req, res) => {
+router.post('/refresh', async (req, res) => {
   const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!refreshToken) return res.status(401).json({ error: 'Refresh token required' });
 
   const userId = verifyRefreshToken(refreshToken);
   if (!userId) return res.status(401).json({ error: 'Invalid or expired refresh token' });
 
-  const db = getDB();
-  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+  const user = await db.get('SELECT id FROM users WHERE id = $1', [userId]);
   if (!user) return res.status(401).json({ error: 'User not found' });
 
   const newToken = generateToken(userId);
@@ -187,30 +181,27 @@ router.post('/refresh', (req, res) => {
   res.json({ token: newToken, message: 'Token refreshed' });
 });
 
-router.get('/me', authenticate, (req, res) => {
-  const db = getDB();
-  const user = db.prepare('SELECT id, name, email, verified, role, created_at FROM users WHERE id = ?').get(req.userId);
+router.get('/me', authenticate, async (req, res) => {
+  const user = await db.get('SELECT id, name, email, verified, role, created_at FROM users WHERE id = $1', [req.userId]);
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json({ user });
 });
 
-router.get('/check-admin', authenticate, (req, res) => {
-  const db = getDB();
-  const user = db.prepare('SELECT role FROM users WHERE id = ?').get(req.userId);
+router.get('/check-admin', authenticate, async (req, res) => {
+  const user = await db.get('SELECT role FROM users WHERE id = $1', [req.userId]);
   res.json({ isAdmin: user?.role === 'admin' });
 });
 
-router.delete('/account', authenticate, (req, res) => {
-  const db = getDB();
-  db.prepare('DELETE FROM pomodoro_sessions WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM habit_logs WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM habits WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM journal_entries WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM mood_logs WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM goals WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM courses WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM tasks WHERE user_id = ?').run(req.userId);
-  db.prepare('DELETE FROM users WHERE id = ?').run(req.userId);
+router.delete('/account', authenticate, async (req, res) => {
+  await db.query('DELETE FROM pomodoro_sessions WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM habit_logs WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM habits WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM journal_entries WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM mood_logs WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM goals WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM courses WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM tasks WHERE user_id = $1', [req.userId]);
+  await db.query('DELETE FROM users WHERE id = $1', [req.userId]);
   res.json({ message: 'Account and all data deleted permanently' });
 });
 

@@ -11,7 +11,12 @@ services:
         generateValue: true
       - key: PORT
         value: 10000
-    disk:
-      name: hayati-data
-      mountPath: /opt/render/project/src
-      sizeGB: 1
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hayati-db
+          property: connectionString
+
+databases:
+  - name: hayati-db
+    plan: free
+    databaseName: hayati

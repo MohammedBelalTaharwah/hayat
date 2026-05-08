@@ -1,29 +1,26 @@
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
-const { getDB } = require('../database');
+const { db } = require('../database');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/', authenticate, (req, res) => {
-  const db = getDB();
-  const entries = db.prepare('SELECT * FROM journal_entries WHERE user_id = ? ORDER BY created_at DESC').all(req.userId);
+router.get('/', authenticate, async (req, res) => {
+  const entries = await db.all('SELECT * FROM journal_entries WHERE user_id = $1 ORDER BY created_at DESC', [req.userId]);
   res.json({ entries });
 });
 
-router.post('/', authenticate, (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   const { title, content, mood_tag } = req.body;
   if (!content) return res.status(400).json({ error: 'Content required' });
-  const db = getDB();
   const id = uuidv4();
-  db.prepare('INSERT INTO journal_entries (id, user_id, title, content, mood_tag) VALUES (?, ?, ?, ?, ?)').run(id, req.userId, title || '', content, mood_tag || null);
-  const entry = db.prepare('SELECT * FROM journal_entries WHERE id = ?').get(id);
+  await db.query('INSERT INTO journal_entries (id, user_id, title, content, mood_tag) VALUES ($1, $2, $3, $4, $5)', [id, req.userId, title || '', content, mood_tag || null]);
+  const entry = await db.get('SELECT * FROM journal_entries WHERE id = $1', [id]);
   res.json({ entry });
 });
 
-router.delete('/:id', authenticate, (req, res) => {
-  const db = getDB();
-  db.prepare('DELETE FROM journal_entries WHERE id = ? AND user_id = ?').run(req.params.id, req.userId);
+router.delete('/:id', authenticate, async (req, res) => {
+  await db.query('DELETE FROM journal_entries WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
   res.json({ message: 'Entry deleted' });
 });
 

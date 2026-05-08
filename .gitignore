@@ -5,3 +5,4 @@ hayati.db-shm
 .env
 *.log
 ngrok.exe
+.vercel
