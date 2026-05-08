@@ -40,6 +40,7 @@ const API = {
     const data = await this.post('/auth/signup', { name, email, password });
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
+    if (data.devOtp) sessionStorage.setItem('devOtp', data.devOtp);
     return data;
   }
 };

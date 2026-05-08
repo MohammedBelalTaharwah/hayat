@@ -34,6 +34,7 @@ tailwind.config = {
 </div>
 <div id="error-msg" class="bg-error-container text-on-error-container p-sm rounded-lg text-body-sm hidden w-full mb-md"></div>
 <div id="success-msg" class="bg-[#d1fae5] text-[#065f46] p-sm rounded-lg text-body-sm hidden w-full mb-md"></div>
+<div id="dev-otp" class="bg-[#fef3c7] text-[#92400e] p-sm rounded-lg text-body-sm hidden w-full mb-md text-center font-bold"></div>
 <div class="w-full mb-xl" dir="ltr">
 <div class="flex justify-center gap-sm md:gap-md">
 <input id="otp-0" aria-label="Digit 1" class="otp-input w-12 h-14 md:w-14 md:h-16 text-center font-h2 text-h2 text-on-background bg-surface border-2 border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm" maxlength="1" placeholder="-" type="text"/>
@@ -57,6 +58,13 @@ Didn't receive the code?
 </div>
 </main>
 <script>
+const devOtp = sessionStorage.getItem('devOtp');
+if (devOtp) {
+  document.getElementById('dev-otp').textContent = 'DEV MODE: Your OTP is ' + devOtp;
+  document.getElementById('dev-otp').classList.remove('hidden');
+  document.querySelectorAll('.otp-input').forEach((inp, i) => { inp.value = devOtp[i] || ''; });
+}
+
 document.querySelectorAll('.otp-input').forEach((input, idx, arr) => {
   input.addEventListener('input', () => {
     if (input.value && idx < arr.length - 1) arr[idx + 1].focus();

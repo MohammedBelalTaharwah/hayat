@@ -77,12 +77,12 @@ router.post('/signup', authLimiter, (req, res) => {
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   db.prepare('INSERT INTO users (id, name, email, password, otp, otp_expires) VALUES (?, ?, ?, ?, ?, ?)').run(id, name, email, hashed, otp, otpExpires);
   console.log(`[DEV] OTP for ${email}: ${otp}`);
-
   const token = generateToken(id);
   const refreshToken = generateRefreshToken(id);
   setTokenCookies(res, token, refreshToken);
 
-  res.json({ token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.' });
+  const devOtp = process.env.NODE_ENV !== 'production' ? { devOtp: otp } : {};
+  res.json({ token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.', ...devOtp });
 });
 
 router.post('/verify-otp', authenticate, otpLimiter, (req, res) => {
