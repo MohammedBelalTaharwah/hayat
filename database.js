@@ -21,8 +21,6 @@ function initDB() {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
-    try { db.exec("ALTER TABLE users ADD COLUMN otp_attempts INTEGER DEFAULT 0"); } catch {}
-
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -118,6 +116,8 @@ function initDB() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
   `);
+
+  try { db.exec("ALTER TABLE users ADD COLUMN otp_attempts INTEGER DEFAULT 0"); } catch {}
 }
 
 function getDB() {
