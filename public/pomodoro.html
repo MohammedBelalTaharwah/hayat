@@ -29,6 +29,13 @@ let timerInterval = null;
 let timeLeft = 25 * 60;
 let isRunning = false;
 let currentType = 'focus';
+let focusMinutes = 25;
+let breakMinutes = 5;
+
+function calcBreak(focus) {
+  if (focus >= 50 && focus <= 60) return 15;
+  return Math.max(5, Math.round(focus * 0.2));
+}
 
 async function init() {
   initAppShell('pomodoro', 'Pomodoro Timer', 'Stay focused, one session at a time');
@@ -41,11 +48,25 @@ async function init() {
   }
 
   function updateDisplay() {
-    document.getElementById('timer-display').textContent = formatTime(timeLeft);
-    const total = currentType === 'focus' ? 25 * 60 : 5 * 60;
-    const pct = (1 - timeLeft / total) * 100;
+    const el = document.getElementById('timer-display');
+    if (el) el.textContent = formatTime(timeLeft);
+    const total = (currentType === 'focus' ? focusMinutes : breakMinutes) * 60;
+    const pct = total > 0 ? (1 - timeLeft / total) * 100 : 0;
     const circle = document.querySelector('.timer-progress');
-    if (circle) circle.style.strokeDashoffset = 440 - (440 * pct / 100);
+    if (circle) circle.style.strokeDashoffset = 440 - (440 * Math.min(pct, 100) / 100);
+  }
+
+  function syncModeButtons() {
+    document.getElementById('mode-focus').className = `px-lg py-sm rounded-lg font-body-main font-semibold active:scale-95 transition-all ${currentType === 'focus' ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`;
+    document.getElementById('mode-break').className = `px-lg py-sm rounded-lg font-body-main font-semibold active:scale-95 transition-all ${currentType === 'break' ? 'bg-primary text-on-primary' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}`;
+  }
+
+  function switchMode(type) {
+    if (isRunning) return;
+    currentType = type;
+    timeLeft = (type === 'focus' ? focusMinutes : breakMinutes) * 60;
+    updateDisplay();
+    syncModeButtons();
   }
 
   async function loadStats() {
@@ -64,8 +85,8 @@ async function init() {
       const list = sessions.slice(0, 10).map(s => `
         <div class="flex justify-between items-center p-sm border-b border-surface-container-low last:border-0">
           <div>
-            <span class="font-body-sm font-semibold">${s.type} - ${s.duration}min</span>
-            ${s.notes ? `<p class="text-body-sm text-on-surface-variant">${s.notes}</p>` : ''}
+            <span class="font-body-sm font-semibold">${escapeHtml(s.type)} - ${s.duration}min</span>
+            ${s.notes ? `<p class="text-body-sm text-on-surface-variant">${escapeHtml(s.notes)}</p>` : ''}
           </div>
           <span class="font-body-sm text-on-surface-variant">${new Date(s.created_at).toLocaleDateString()}</span>
         </div>
@@ -79,9 +100,19 @@ async function init() {
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
         <div class="lg:col-span-2 flex flex-col items-center">
           <div class="bg-surface-container-lowest p-xl rounded-xl shadow-level-1 border border-surface-container-low w-full max-w-lg text-center">
-            <div class="flex justify-center gap-md mb-lg">
-              <button id="mode-focus" class="px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all">Focus (25m)</button>
-              <button id="mode-break" class="px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">Break (5m)</button>
+            <div class="flex justify-center gap-md mb-lg" id="mode-buttons">
+              <button id="mode-focus" class="px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all">Focus</button>
+              <button id="mode-break" class="px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">Break</button>
+            </div>
+            <div class="flex justify-center gap-lg mb-lg">
+              <div>
+                <label class="font-label-caps text-label-caps text-on-surface-variant block mb-xs">Focus (min)</label>
+                <input id="focus-input" type="number" min="1" max="180" value="25" class="w-20 text-center font-h2 bg-surface border border-outline-variant rounded-lg px-2 py-1 focus:ring-primary focus:border-primary" />
+              </div>
+              <div>
+                <label class="font-label-caps text-label-caps text-on-surface-variant block mb-xs">Break (min)</label>
+                <input id="break-input" type="number" min="1" max="60" value="5" class="w-20 text-center font-h2 bg-surface border border-outline-variant rounded-lg px-2 py-1 focus:ring-primary focus:border-primary" />
+              </div>
             </div>
             <div class="relative w-64 h-64 mx-auto mb-lg">
               <svg class="w-64 h-64 -rotate-90" viewBox="0 0 160 160">
@@ -130,22 +161,30 @@ async function init() {
     </div>
   `;
 
-  document.getElementById('mode-focus').addEventListener('click', function() {
+  document.getElementById('mode-focus').addEventListener('click', () => switchMode('focus'));
+  document.getElementById('mode-break').addEventListener('click', () => switchMode('break'));
+
+  document.getElementById('focus-input').addEventListener('change', function() {
     if (isRunning) return;
-    currentType = 'focus';
-    timeLeft = 25 * 60;
-    this.className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all';
-    document.getElementById('mode-break').className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all';
-    updateDisplay();
+    focusMinutes = Math.max(1, parseInt(this.value) || 25);
+    this.value = focusMinutes;
+    const suggested = calcBreak(focusMinutes);
+    document.getElementById('break-input').value = suggested;
+    breakMinutes = suggested;
+    if (currentType === 'focus') {
+      timeLeft = focusMinutes * 60;
+      updateDisplay();
+    }
   });
 
-  document.getElementById('mode-break').addEventListener('click', function() {
+  document.getElementById('break-input').addEventListener('change', function() {
     if (isRunning) return;
-    currentType = 'break';
-    timeLeft = 5 * 60;
-    this.className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all';
-    document.getElementById('mode-focus').className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all';
-    updateDisplay();
+    breakMinutes = Math.max(1, parseInt(this.value) || 5);
+    this.value = breakMinutes;
+    if (currentType === 'break') {
+      timeLeft = breakMinutes * 60;
+      updateDisplay();
+    }
   });
 
   document.getElementById('timer-start-btn').addEventListener('click', function() {
@@ -155,6 +194,10 @@ async function init() {
       this.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Resume';
       return;
     }
+    if (timeLeft <= 0) {
+      timeLeft = (currentType === 'focus' ? focusMinutes : breakMinutes) * 60;
+      updateDisplay();
+    }
     isRunning = true;
     this.innerHTML = '<span class="material-symbols-outlined">pause</span> Pause';
     timerInterval = setInterval(() => {
@@ -163,12 +206,19 @@ async function init() {
       if (timeLeft <= 0) {
         clearInterval(timerInterval);
         isRunning = false;
+        const dur = currentType === 'focus' ? focusMinutes : breakMinutes;
         document.getElementById('timer-start-btn').innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Start';
-        API.post('/pomodoro/sessions', { duration: currentType === 'focus' ? 25 : 5, type: currentType }).then(() => {
+        API.post('/pomodoro/sessions', { duration: dur, type: currentType }).then(() => {
           loadStats();
           loadSessions();
         });
-        alert(currentType === 'focus' ? 'Focus session complete! Time for a break.' : 'Break over! Ready to focus?');
+        if (currentType === 'focus') {
+          alert(`Focus session (${dur}min) complete! Take a break.`);
+          switchMode('break');
+        } else {
+          alert(`Break over! Ready to focus again?`);
+          switchMode('focus');
+        }
       }
     }, 1000);
   });
@@ -176,7 +226,7 @@ async function init() {
   document.getElementById('timer-reset-btn').addEventListener('click', function() {
     clearInterval(timerInterval);
     isRunning = false;
-    timeLeft = currentType === 'focus' ? 25 * 60 : 5 * 60;
+    timeLeft = (currentType === 'focus' ? focusMinutes : breakMinutes) * 60;
     updateDisplay();
     document.getElementById('timer-start-btn').innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Start';
   });
