@@ -1,0 +1,6 @@
+node_modules/
+hayati.db
+hayati.db-wal
+hayati.db-shm
+.env
+*.log

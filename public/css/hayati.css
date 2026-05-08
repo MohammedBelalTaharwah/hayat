@@ -1,0 +1,6 @@
+.shadow-level-1 { box-shadow: 0 4px 6px -1px rgba(15,23,42,0.05), 0 2px 4px -1px rgba(15,23,42,0.03); }
+.shadow-level-2 { box-shadow: 0 10px 15px -3px rgba(15,23,42,0.1); }
+.sidebar-active { border-inline-start: 4px solid #6063ee; background: rgba(255,255,255,0.1); color: white; font-weight: 700; border-radius: 0 0.5rem 0.5rem 0; }
+[dir="rtl"] .sidebar-active { border-radius: 0.5rem 0 0 0.5rem; }
+.material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+.material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }

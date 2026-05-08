@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hayati | حياتي - Courses</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/css/hayati.css" rel="stylesheet"/>
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: { "primary-container": "#6063ee", "surface-dim": "#d8dadc", "on-tertiary-fixed": "#301400", "tertiary-fixed": "#ffdcc5", "on-primary-fixed-variant": "#2f2ebe", "surface-container": "#eceef0", "surface-container-highest": "#e0e3e5", "on-error-container": "#93000a", "secondary-container": "#dae2fd", "surface-bright": "#f7f9fb", "secondary-fixed-dim": "#bec6e0", "primary-fixed-dim": "#c0c1ff", "tertiary-fixed-dim": "#ffb783", "on-surface-variant": "#464554", "surface-container-low": "#f2f4f6", "secondary-fixed": "#dae2fd", "on-tertiary-container": "#fffbff", "inverse-surface": "#2d3133", "on-primary": "#ffffff", "tertiary-container": "#b55d00", "surface-container-high": "#e6e8ea", "on-tertiary": "#ffffff", "primary-fixed": "#e1e0ff", "surface-variant": "#e0e3e5", "background": "#f7f9fb", "on-error": "#ffffff", "on-primary-fixed": "#07006c", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#703700", "inverse-on-surface": "#eff1f3", "surface": "#f7f9fb", "on-surface": "#191c1e", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#3f465c", "error": "#ba1a1a", "on-secondary-fixed": "#131b2e", "outline-variant": "#c7c4d7", "tertiary": "#904900", "secondary": "#565e74", "primary": "#4648d4", "inverse-primary": "#c0c1ff", "surface-tint": "#494bd6", "surface-container-lowest": "#ffffff", "on-background": "#191c1e", "on-secondary-container": "#5c647a", "outline": "#767586", "on-primary-container": "#fffbff" },
+    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+    spacing: { xxl: "48px", base: "4px", xs: "4px", sidebar_width: "280px", xl: "32px", container_max: "1280px", md: "16px", lg: "24px", sm: "8px" },
+    fontFamily: { "body-main": ["Inter"], h2: ["Inter"], "body-sm": ["Inter"], "label-caps": ["Inter"], "rtl-h1": ["Cairo"], "rtl-body": ["Cairo"], "display-lg": ["Inter"], h1: ["Inter"] },
+    fontSize: { "body-main": ["16px", { lineHeight: "1.6", fontWeight: "400" }], h2: ["20px", { lineHeight: "1.4", fontWeight: "600" }], "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }], "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" }], "rtl-h1": ["26px", { lineHeight: "1.4", fontWeight: "700" }], "rtl-body": ["16px", { lineHeight: "1.7", fontWeight: "400" }], "display-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }], h1: ["24px", { lineHeight: "1.3", fontWeight: "600" }] }
+  }}
+}
+</script>
+</head>
+<body></body>
+<script>
+async function init() {
+  initAppShell('courses', 'Courses & Videos', 'Track your learning journey');
+  const main = document.getElementById('app-main');
+
+  async function load() {
+    try {
+      const data = await API.get('/courses');
+      const courses = data.courses || [];
+
+      const stats = courses.reduce((acc, c) => {
+        acc.totalHours += c.total_hours || 0;
+        acc.completedHours += c.completed_hours || 0;
+        return acc;
+      }, { totalHours: 0, completedHours: 0 });
+
+      const cards = courses.map(c => {
+        const progress = c.total_hours > 0 ? Math.round((c.completed_hours / c.total_hours) * 100) : 0;
+        const statusColors = { in_progress: 'bg-primary-fixed text-primary', completed: 'bg-[#d1fae5] text-[#065f46]', dropped: 'bg-error-container text-on-error-container' };
+        const sc = statusColors[c.status] || statusColors.in_progress;
+        return `
+          <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
+            <div class="flex justify-between items-start mb-sm">
+              <div>
+                <h3 class="font-h2 text-h2 text-on-surface">${c.title}</h3>
+                ${c.provider ? `<p class="font-body-sm text-body-sm text-on-surface-variant mt-xs">${c.provider}</p>` : ''}
+              </div>
+              <span class="font-label-caps text-label-caps ${sc} px-sm py-xs rounded-full">${c.status}</span>
+            </div>
+            ${c.url ? `<a href="${c.url}" target="_blank" class="text-primary text-body-sm hover:underline flex items-center gap-xs"><span class="material-symbols-outlined text-[16px]">open_in_new</span> Open course</a>` : ''}
+            <div class="mt-md">
+              <div class="flex justify-between text-body-sm mb-xs">
+                <span class="text-on-surface-variant">${c.completed_hours || 0} / ${c.total_hours || 0} hours</span>
+                <span class="font-semibold text-primary">${progress}%</span>
+              </div>
+              <div class="bg-surface-container h-2 rounded-full overflow-hidden">
+                <div class="bg-primary h-full rounded-full" style="width: ${progress}%"></div>
+              </div>
+            </div>
+            <div class="flex gap-sm mt-md">
+              <button class="course-add-hour flex-1 bg-surface-container text-body-sm py-sm rounded-lg hover:bg-surface-container-high transition-colors" data-id="${c.id}">+1 Hour</button>
+              <button class="course-delete text-outline-variant hover:text-error transition-colors p-xs" data-id="${c.id}"><span class="material-symbols-outlined">delete</span></button>
+            </div>
+          </div>
+        `;
+      }).join('') || '<p class="text-body-sm text-on-surface-variant">No courses yet. Add your first course!</p>';
+
+      main.innerHTML = `
+        <div class="max-w-container_max mx-auto space-y-lg">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-md mb-lg">
+            <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low text-center">
+              <div class="font-display-lg text-display-lg text-primary">${courses.length}</div>
+              <div class="font-label-caps text-label-caps text-on-surface-variant uppercase">Courses</div>
+            </div>
+            <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low text-center">
+              <div class="font-display-lg text-display-lg text-primary">${stats.completedHours}h</div>
+              <div class="font-label-caps text-label-caps text-on-surface-variant uppercase">Completed</div>
+            </div>
+            <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low text-center">
+              <div class="font-display-lg text-display-lg text-primary">${stats.totalHours}h</div>
+              <div class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Hours</div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <p class="font-body-sm text-body-sm text-on-surface-variant">${courses.length} course${courses.length !== 1 ? 's' : ''}</p>
+            <button id="add-course-btn" class="bg-primary text-on-primary px-lg py-sm rounded-lg font-body-main hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-sm">
+              <span class="material-symbols-outlined">add</span> Add Course
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">${cards}</div>
+        </div>
+      `;
+
+      document.getElementById('add-course-btn').addEventListener('click', async () => {
+        const title = prompt('Course title:');
+        if (!title) return;
+        const provider = prompt('Provider (e.g. Coursera, Udemy):') || '';
+        const hours = parseFloat(prompt('Total hours:') || '0');
+        await API.post('/courses', { title, provider, total_hours: hours });
+        load();
+      });
+
+      document.querySelectorAll('.course-add-hour').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const id = this.dataset.id;
+          const course = courses.find(c => c.id === id);
+          const newHours = (course.completed_hours || 0) + 1;
+          const status = newHours >= (course.total_hours || 0) ? 'completed' : 'in_progress';
+          await API.put(`/courses/${id}`, { completed_hours: newHours, status });
+          load();
+        });
+      });
+
+      document.querySelectorAll('.course-delete').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          if (confirm('Delete this course?')) {
+            await API.del(`/courses/${this.dataset.id}`);
+            load();
+          }
+        });
+      });
+    } catch (err) {
+      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+    }
+  }
+  load();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</html>

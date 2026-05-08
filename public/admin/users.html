@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Users - Admin - Hayati</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="/css/hayati.css" rel="stylesheet"/>
+<script src="/js/api.js"></script>
+<script src="admin.js"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: { "primary-container": "#6063ee", "surface-dim": "#d8dadc", "on-tertiary-fixed": "#301400", "tertiary-fixed": "#ffdcc5", "on-primary-fixed-variant": "#2f2ebe", "surface-container": "#eceef0", "surface-container-highest": "#e0e3e5", "on-error-container": "#93000a", "secondary-container": "#dae2fd", "surface-bright": "#f7f9fb", "secondary-fixed-dim": "#bec6e0", "primary-fixed-dim": "#c0c1ff", "tertiary-fixed-dim": "#ffb783", "on-surface-variant": "#464554", "surface-container-low": "#f2f4f6", "secondary-fixed": "#dae2fd", "on-tertiary-container": "#fffbff", "inverse-surface": "#2d3133", "on-primary": "#ffffff", "tertiary-container": "#b55d00", "surface-container-high": "#e6e8ea", "on-tertiary": "#ffffff", "primary-fixed": "#e1e0ff", "surface-variant": "#e0e3e5", "background": "#f7f9fb", "on-error": "#ffffff", "on-primary-fixed": "#07006c", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#703700", "inverse-on-surface": "#eff1f3", "surface": "#f7f9fb", "on-surface": "#191c1e", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#3f465c", "error": "#ba1a1a", "on-secondary-fixed": "#131b2e", "outline-variant": "#c7c4d7", "tertiary": "#904900", "secondary": "#565e74", "primary": "#4648d4", "inverse-primary": "#c0c1ff", "surface-tint": "#494bd6", "surface-container-lowest": "#ffffff", "on-background": "#191c1e", "on-secondary-container": "#5c647a", "outline": "#767586", "on-primary-container": "#fffbff" },
+    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+    spacing: { xxl: "48px", base: "4px", xs: "4px", sidebar_width: "280px", xl: "32px", container_max: "1280px", md: "16px", lg: "24px", sm: "8px" },
+    fontFamily: { "body-main": ["Inter"], h2: ["Inter"], "body-sm": ["Inter"], "label-caps": ["Inter"], "rtl-h1": ["Cairo"], "rtl-body": ["Cairo"], "display-lg": ["Inter"], h1: ["Inter"] },
+    fontSize: { "body-main": ["16px", { lineHeight: "1.6", fontWeight: "400" }], h2: ["20px", { lineHeight: "1.4", fontWeight: "600" }], "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }], "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" }], "rtl-h1": ["26px", { lineHeight: "1.4", fontWeight: "700" }], "rtl-body": ["16px", { lineHeight: "1.7", fontWeight: "400" }], "display-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }], h1: ["24px", { lineHeight: "1.3", fontWeight: "600" }] }
+  }}
+}
+</script>
+</head>
+<body></body>
+<script>
+async function init() {
+  initAdminShell('users', 'Users Management');
+  const main = document.getElementById('admin-main');
+  let users = [];
+
+  async function render(search) {
+    try {
+      const data = search ? await AdminAPI.get(`/users?search=${encodeURIComponent(search)}`) : await AdminAPI.get('/users');
+      users = data.users || [];
+      main.innerHTML = `
+        <div class="space-y-lg">
+          <div class="flex gap-md items-center">
+            <div class="relative flex-1 max-w-md">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-size:20px;">search</span>
+              <input id="search-input" class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none text-body-sm font-body-sm" placeholder="Search users..." value="${search || ''}" />
+            </div>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">${users.length} user${users.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="bg-surface-container-lowest rounded-xl shadow-level-1 border border-surface-container-low overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-body-sm">
+                <thead>
+                  <tr class="bg-surface-container border-b border-surface-container-high">
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">User</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Email</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Role</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Status</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Tasks</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Habits</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Moods</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Joined</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${users.map(u => `
+                    <tr class="border-b border-surface-container-low hover:bg-surface-bright transition-colors">
+                      <td class="p-md font-medium">${u.name}</td>
+                      <td class="p-md text-on-surface-variant">${u.email}</td>
+                      <td class="p-md">
+                        <select class="role-select bg-transparent border border-outline-variant rounded px-2 py-0.5 text-body-sm focus:ring-primary" data-id="${u.id}">
+                          <option value="user" ${u.role === 'user' ? 'selected' : ''}>User</option>
+                          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                        </select>
+                      </td>
+                      <td class="p-md">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${u.verified ? 'bg-[#d1fae5] text-[#065f46]' : 'bg-error-container text-on-error-container'}">
+                          ${u.verified ? 'Verified' : 'Unverified'}
+                        </span>
+                      </td>
+                      <td class="p-md text-on-surface-variant">${u.tasksCount || 0}</td>
+                      <td class="p-md text-on-surface-variant">${u.habitsCount || 0}</td>
+                      <td class="p-md text-on-surface-variant">${u.moodsCount || 0}</td>
+                      <td class="p-md text-on-surface-variant">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                      <td class="p-md">
+                        <button class="delete-user text-on-surface-variant hover:text-error transition-colors p-xs" data-id="${u.id}" data-name="${u.name}"><span class="material-symbols-outlined" style="font-size:18px;">delete</span></button>
+                      </td>
+                    </tr>
+                  `).join('')}
+                  ${users.length === 0 ? '<tr><td colspan="9" class="p-md text-center text-on-surface-variant">No users found</td></tr>' : ''}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(this._timer);
+        this._timer = setTimeout(() => render(this.value), 300);
+      });
+
+      document.querySelectorAll('.role-select').forEach(sel => {
+        sel.addEventListener('change', async function() {
+          try {
+            await AdminAPI.put(`/users/${this.dataset.id}/role`, { role: this.value });
+            alert('Role updated!');
+          } catch (err) { alert(err.message); render(); }
+        });
+      });
+
+      document.querySelectorAll('.delete-user').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          if (confirm(`Delete user "${this.dataset.name}" and ALL their data? This cannot be undone.`)) {
+            try {
+              await AdminAPI.del(`/users/${this.dataset.id}`);
+              render();
+            } catch (err) { alert(err.message); }
+          }
+        });
+      });
+    } catch (err) {
+      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+    }
+  }
+  render();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tasks - Admin - Hayati</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="/css/hayati.css" rel="stylesheet"/>
+<script src="/js/api.js"></script>
+<script src="admin.js"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: { "primary-container": "#6063ee", "surface-dim": "#d8dadc", "on-tertiary-fixed": "#301400", "tertiary-fixed": "#ffdcc5", "on-primary-fixed-variant": "#2f2ebe", "surface-container": "#eceef0", "surface-container-highest": "#e0e3e5", "on-error-container": "#93000a", "secondary-container": "#dae2fd", "surface-bright": "#f7f9fb", "secondary-fixed-dim": "#bec6e0", "primary-fixed-dim": "#c0c1ff", "tertiary-fixed-dim": "#ffb783", "on-surface-variant": "#464554", "surface-container-low": "#f2f4f6", "secondary-fixed": "#dae2fd", "on-tertiary-container": "#fffbff", "inverse-surface": "#2d3133", "on-primary": "#ffffff", "tertiary-container": "#b55d00", "surface-container-high": "#e6e8ea", "on-tertiary": "#ffffff", "primary-fixed": "#e1e0ff", "surface-variant": "#e0e3e5", "background": "#f7f9fb", "on-error": "#ffffff", "on-primary-fixed": "#07006c", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#703700", "inverse-on-surface": "#eff1f3", "surface": "#f7f9fb", "on-surface": "#191c1e", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#3f465c", "error": "#ba1a1a", "on-secondary-fixed": "#131b2e", "outline-variant": "#c7c4d7", "tertiary": "#904900", "secondary": "#565e74", "primary": "#4648d4", "inverse-primary": "#c0c1ff", "surface-tint": "#494bd6", "surface-container-lowest": "#ffffff", "on-background": "#191c1e", "on-secondary-container": "#5c647a", "outline": "#767586", "on-primary-container": "#fffbff" },
+    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+    spacing: { xxl: "48px", base: "4px", xs: "4px", sidebar_width: "280px", xl: "32px", container_max: "1280px", md: "16px", lg: "24px", sm: "8px" },
+    fontFamily: { "body-main": ["Inter"], h2: ["Inter"], "body-sm": ["Inter"], "label-caps": ["Inter"], "rtl-h1": ["Cairo"], "rtl-body": ["Cairo"], "display-lg": ["Inter"], h1: ["Inter"] },
+    fontSize: { "body-main": ["16px", { lineHeight: "1.6", fontWeight: "400" }], h2: ["20px", { lineHeight: "1.4", fontWeight: "600" }], "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }], "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" }], "rtl-h1": ["26px", { lineHeight: "1.4", fontWeight: "700" }], "rtl-body": ["16px", { lineHeight: "1.7", fontWeight: "400" }], "display-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }], h1: ["24px", { lineHeight: "1.3", fontWeight: "600" }] }
+  }}
+}
+</script>
+</head>
+<body></body>
+<script>
+async function init() {
+  initAdminShell('tasks', 'All Tasks Overview');
+  const main = document.getElementById('admin-main');
+
+  async function render() {
+    try {
+      const data = await AdminAPI.get('/tasks');
+      const tasks = data.tasks || [];
+      const qColors = {
+        urgent_important: 'bg-error-container/20 text-error',
+        not_urgent_important: 'bg-secondary-container/30 text-primary',
+        urgent_not_important: 'bg-tertiary-fixed/30 text-tertiary',
+        not_urgent_not_important: 'bg-surface-container text-on-surface-variant'
+      };
+      const qLabels = {
+        urgent_important: 'Do First',
+        not_urgent_important: 'Schedule',
+        urgent_not_important: 'Delegate',
+        not_urgent_not_important: 'Eliminate'
+      };
+
+      main.innerHTML = `
+        <div class="space-y-lg">
+          <div class="flex gap-md items-center">
+            <div class="relative flex-1 max-w-md">
+              <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" style="font-size:20px;">search</span>
+              <input id="search-input" class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:outline-none text-body-sm font-body-sm" placeholder="Search tasks or users..." />
+            </div>
+            <select id="quadrant-filter" class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-body-sm focus:ring-primary">
+              <option value="">All Quadrants</option>
+              <option value="urgent_important">Do First</option>
+              <option value="not_urgent_important">Schedule</option>
+              <option value="urgent_not_important">Delegate</option>
+              <option value="not_urgent_not_important">Eliminate</option>
+            </select>
+            <select id="status-filter" class="bg-surface-container-lowest border border-outline-variant rounded-lg px-3 py-2 text-body-sm focus:ring-primary">
+              <option value="">All Status</option>
+              <option value="0">Active</option>
+              <option value="1">Completed</option>
+            </select>
+            <span class="font-body-sm text-body-sm text-on-surface-variant">${tasks.length} task${tasks.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="bg-surface-container-lowest rounded-xl shadow-level-1 border border-surface-container-low overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-body-sm">
+                <thead>
+                  <tr class="bg-surface-container border-b border-surface-container-high">
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Title</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">User</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Quadrant</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Status</th>
+                    <th class="text-start p-md font-label-caps text-label-caps text-on-surface-variant">Created</th>
+                  </tr>
+                </thead>
+                <tbody id="tasks-body">
+                  ${tasks.map(t => `
+                    <tr class="border-b border-surface-container-low hover:bg-surface-bright transition-colors">
+                      <td class="p-md font-medium">${t.title}</td>
+                      <td class="p-md text-on-surface-variant">${t.user_name || 'Unknown'}</td>
+                      <td class="p-md"><span class="inline-flex px-2 py-0.5 rounded text-[10px] uppercase font-bold ${qColors[t.quadrant] || 'bg-surface-container text-on-surface-variant'}">${qLabels[t.quadrant] || t.quadrant}</span></td>
+                      <td class="p-md"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${t.completed ? 'bg-[#d1fae5] text-[#065f46]' : 'bg-surface-container text-on-surface-variant'}">${t.completed ? 'Done' : 'Active'}</span></td>
+                      <td class="p-md text-on-surface-variant">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
+                    </tr>
+                  `).join('')}
+                  ${tasks.length === 0 ? '<tr><td colspan="5" class="p-md text-center text-on-surface-variant">No tasks found</td></tr>' : ''}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      `;
+
+      async function filterTasks() {
+        const params = new URLSearchParams();
+        const q = document.getElementById('quadrant-filter').value;
+        const s = document.getElementById('status-filter').value;
+        const search = document.getElementById('search-input').value;
+        if (q) params.set('quadrant', q);
+        if (s !== '') params.set('completed', s);
+        if (search) params.set('search', search);
+        try {
+          const data = await AdminAPI.get(`/tasks?${params.toString()}`);
+          const filtered = data.tasks || [];
+          const tbody = document.getElementById('tasks-body');
+          tbody.innerHTML = filtered.map(t => {
+            const qc = qColors[t.quadrant] || 'bg-surface-container text-on-surface-variant';
+            const ql = qLabels[t.quadrant] || t.quadrant;
+            return `<tr class="border-b border-surface-container-low hover:bg-surface-bright transition-colors">
+              <td class="p-md font-medium">${t.title}</td>
+              <td class="p-md text-on-surface-variant">${t.user_name || 'Unknown'}</td>
+              <td class="p-md"><span class="inline-flex px-2 py-0.5 rounded text-[10px] uppercase font-bold ${qc}">${ql}</span></td>
+              <td class="p-md"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${t.completed ? 'bg-[#d1fae5] text-[#065f46]' : 'bg-surface-container text-on-surface-variant'}">${t.completed ? 'Done' : 'Active'}</span></td>
+              <td class="p-md text-on-surface-variant">${t.created_at ? new Date(t.created_at).toLocaleDateString() : '-'}</td>
+            </tr>`;
+          }).join('') || '<tr><td colspan="5" class="p-md text-center text-on-surface-variant">No tasks match</td></tr>';
+        } catch {}
+      }
+
+      document.getElementById('search-input').addEventListener('input', function() {
+        clearTimeout(this._timer);
+        this._timer = setTimeout(filterTasks, 300);
+      });
+      document.getElementById('quadrant-filter').addEventListener('change', filterTasks);
+      document.getElementById('status-filter').addEventListener('change', filterTasks);
+    } catch (err) {
+      main.innerHTML = `<p class="text-error">Error: ${err.message}</p>`;
+    }
+  }
+  render();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</html>

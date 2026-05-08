@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hayati | حياتي - Pomodoro Timer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/css/hayati.css" rel="stylesheet"/>
+<script src="/js/api.js"></script>
+<script src="/js/sidebar.js"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: { "primary-container": "#6063ee", "surface-dim": "#d8dadc", "on-tertiary-fixed": "#301400", "tertiary-fixed": "#ffdcc5", "on-primary-fixed-variant": "#2f2ebe", "surface-container": "#eceef0", "surface-container-highest": "#e0e3e5", "on-error-container": "#93000a", "secondary-container": "#dae2fd", "surface-bright": "#f7f9fb", "secondary-fixed-dim": "#bec6e0", "primary-fixed-dim": "#c0c1ff", "tertiary-fixed-dim": "#ffb783", "on-surface-variant": "#464554", "surface-container-low": "#f2f4f6", "secondary-fixed": "#dae2fd", "on-tertiary-container": "#fffbff", "inverse-surface": "#2d3133", "on-primary": "#ffffff", "tertiary-container": "#b55d00", "surface-container-high": "#e6e8ea", "on-tertiary": "#ffffff", "primary-fixed": "#e1e0ff", "surface-variant": "#e0e3e5", "background": "#f7f9fb", "on-error": "#ffffff", "on-primary-fixed": "#07006c", "on-secondary": "#ffffff", "on-tertiary-fixed-variant": "#703700", "inverse-on-surface": "#eff1f3", "surface": "#f7f9fb", "on-surface": "#191c1e", "error-container": "#ffdad6", "on-secondary-fixed-variant": "#3f465c", "error": "#ba1a1a", "on-secondary-fixed": "#131b2e", "outline-variant": "#c7c4d7", "tertiary": "#904900", "secondary": "#565e74", "primary": "#4648d4", "inverse-primary": "#c0c1ff", "surface-tint": "#494bd6", "surface-container-lowest": "#ffffff", "on-background": "#191c1e", "on-secondary-container": "#5c647a", "outline": "#767586", "on-primary-container": "#fffbff" },
+    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+    spacing: { xxl: "48px", base: "4px", xs: "4px", sidebar_width: "280px", xl: "32px", container_max: "1280px", md: "16px", lg: "24px", sm: "8px" },
+    fontFamily: { "body-main": ["Inter"], h2: ["Inter"], "body-sm": ["Inter"], "label-caps": ["Inter"], "rtl-h1": ["Cairo"], "rtl-body": ["Cairo"], "display-lg": ["Inter"], h1: ["Inter"] },
+    fontSize: { "body-main": ["16px", { lineHeight: "1.6", fontWeight: "400" }], h2: ["20px", { lineHeight: "1.4", fontWeight: "600" }], "body-sm": ["14px", { lineHeight: "1.5", fontWeight: "400" }], "label-caps": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" }], "rtl-h1": ["26px", { lineHeight: "1.4", fontWeight: "700" }], "rtl-body": ["16px", { lineHeight: "1.7", fontWeight: "400" }], "display-lg": ["32px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }], h1: ["24px", { lineHeight: "1.3", fontWeight: "600" }] }
+  }}
+}
+</script>
+</head>
+<body></body>
+<script>
+let timerInterval = null;
+let timeLeft = 25 * 60;
+let isRunning = false;
+let currentType = 'focus';
+
+async function init() {
+  initAppShell('pomodoro', 'Pomodoro Timer', 'Stay focused, one session at a time');
+  const main = document.getElementById('app-main');
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function updateDisplay() {
+    document.getElementById('timer-display').textContent = formatTime(timeLeft);
+    const total = currentType === 'focus' ? 25 * 60 : 5 * 60;
+    const pct = (1 - timeLeft / total) * 100;
+    const circle = document.querySelector('.timer-progress');
+    if (circle) circle.style.strokeDashoffset = 440 - (440 * pct / 100);
+  }
+
+  async function loadStats() {
+    try {
+      const stats = await API.get('/pomodoro/stats');
+      document.getElementById('today-count').textContent = stats.today?.count || 0;
+      document.getElementById('today-min').textContent = stats.today?.total_minutes || 0;
+      document.getElementById('total-count').textContent = stats.total?.count || 0;
+    } catch {}
+  }
+
+  async function loadSessions() {
+    try {
+      const data = await API.get('/pomodoro/sessions');
+      const sessions = data.sessions || [];
+      const list = sessions.slice(0, 10).map(s => `
+        <div class="flex justify-between items-center p-sm border-b border-surface-container-low last:border-0">
+          <div>
+            <span class="font-body-sm font-semibold">${s.type} - ${s.duration}min</span>
+            ${s.notes ? `<p class="text-body-sm text-on-surface-variant">${s.notes}</p>` : ''}
+          </div>
+          <span class="font-body-sm text-on-surface-variant">${new Date(s.created_at).toLocaleDateString()}</span>
+        </div>
+      `).join('') || '<p class="text-body-sm text-on-surface-variant text-center py-md">No sessions yet</p>';
+      document.getElementById('session-list').innerHTML = list;
+    } catch {}
+  }
+
+  main.innerHTML = `
+    <div class="max-w-container_max mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+        <div class="lg:col-span-2 flex flex-col items-center">
+          <div class="bg-surface-container-lowest p-xl rounded-xl shadow-level-1 border border-surface-container-low w-full max-w-lg text-center">
+            <div class="flex justify-center gap-md mb-lg">
+              <button id="mode-focus" class="px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all">Focus (25m)</button>
+              <button id="mode-break" class="px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all">Break (5m)</button>
+            </div>
+            <div class="relative w-64 h-64 mx-auto mb-lg">
+              <svg class="w-64 h-64 -rotate-90" viewBox="0 0 160 160">
+                <circle cx="80" cy="80" r="70" fill="none" stroke="#e0e3e5" stroke-width="8"/>
+                <circle class="timer-progress" cx="80" cy="80" r="70" fill="none" stroke="#4648d4" stroke-width="8" stroke-linecap="round" stroke-dasharray="440" stroke-dashoffset="440"/>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <span id="timer-display" class="font-display-lg text-display-lg text-on-surface" style="font-size: 48px;">25:00</span>
+              </div>
+            </div>
+            <div class="flex justify-center gap-md">
+              <button id="timer-start-btn" class="bg-primary text-on-primary px-xl py-md rounded-lg font-h2 text-h2 hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-sm">
+                <span class="material-symbols-outlined">play_arrow</span> Start
+              </button>
+              <button id="timer-reset-btn" class="bg-surface-container text-on-surface-variant px-xl py-md rounded-lg font-h2 text-h2 hover:bg-surface-container-high active:scale-95 transition-all">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div class="space-y-lg">
+          <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
+            <h3 class="font-h2 text-h2 text-on-surface mb-md">Today's Stats</h3>
+            <div class="grid grid-cols-2 gap-md text-center">
+              <div>
+                <div class="font-display-lg text-display-lg text-primary" id="today-count">0</div>
+                <div class="font-label-caps text-label-caps text-on-surface-variant">Sessions</div>
+              </div>
+              <div>
+                <div class="font-display-lg text-display-lg text-primary" id="today-min">0</div>
+                <div class="font-label-caps text-label-caps text-on-surface-variant">Minutes</div>
+              </div>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
+            <h3 class="font-h2 text-h2 text-on-surface mb-md">All Time</h3>
+            <div class="text-center">
+              <div class="font-display-lg text-display-lg text-primary" id="total-count">0</div>
+              <div class="font-label-caps text-label-caps text-on-surface-variant">Total Sessions</div>
+            </div>
+          </div>
+          <div class="bg-surface-container-lowest p-lg rounded-xl shadow-level-1 border border-surface-container-low">
+            <h3 class="font-h2 text-h2 text-on-surface mb-md">Recent Sessions</h3>
+            <div id="session-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('mode-focus').addEventListener('click', function() {
+    if (isRunning) return;
+    currentType = 'focus';
+    timeLeft = 25 * 60;
+    this.className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all';
+    document.getElementById('mode-break').className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all';
+    updateDisplay();
+  });
+
+  document.getElementById('mode-break').addEventListener('click', function() {
+    if (isRunning) return;
+    currentType = 'break';
+    timeLeft = 5 * 60;
+    this.className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-primary text-on-primary active:scale-95 transition-all';
+    document.getElementById('mode-focus').className = 'px-lg py-sm rounded-lg font-body-main font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-all';
+    updateDisplay();
+  });
+
+  document.getElementById('timer-start-btn').addEventListener('click', function() {
+    if (isRunning) {
+      clearInterval(timerInterval);
+      isRunning = false;
+      this.innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Resume';
+      return;
+    }
+    isRunning = true;
+    this.innerHTML = '<span class="material-symbols-outlined">pause</span> Pause';
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        document.getElementById('timer-start-btn').innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Start';
+        API.post('/pomodoro/sessions', { duration: currentType === 'focus' ? 25 : 5, type: currentType }).then(() => {
+          loadStats();
+          loadSessions();
+        });
+        alert(currentType === 'focus' ? 'Focus session complete! Time for a break.' : 'Break over! Ready to focus?');
+      }
+    }, 1000);
+  });
+
+  document.getElementById('timer-reset-btn').addEventListener('click', function() {
+    clearInterval(timerInterval);
+    isRunning = false;
+    timeLeft = currentType === 'focus' ? 25 * 60 : 5 * 60;
+    updateDisplay();
+    document.getElementById('timer-start-btn').innerHTML = '<span class="material-symbols-outlined">play_arrow</span> Start';
+  });
+
+  loadStats();
+  loadSessions();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</html>
