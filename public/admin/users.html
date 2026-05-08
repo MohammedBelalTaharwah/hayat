@@ -71,9 +71,10 @@ async function init() {
                         </select>
                       </td>
                       <td class="p-md">
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${u.verified ? 'bg-[#d1fae5] text-[#065f46]' : 'bg-error-container text-on-error-container'}">
-                          ${u.verified ? 'Verified' : 'Unverified'}
-                        </span>
+                        ${u.verified
+                          ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-[#d1fae5] text-[#065f46]">Verified</span>'
+                          : `<button class="verify-user inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-error-container text-on-error-container hover:bg-primary hover:text-white transition-colors" data-id="${u.id}">Verify</button>`
+                        }
                       </td>
                       <td class="p-md text-on-surface-variant">${u.tasksCount || 0}</td>
                       <td class="p-md text-on-surface-variant">${u.habitsCount || 0}</td>
@@ -103,6 +104,15 @@ async function init() {
             await AdminAPI.put(`/users/${this.dataset.id}/role`, { role: this.value });
             alert('Role updated!');
           } catch (err) { alert(err.message); render(); }
+        });
+      });
+
+      document.querySelectorAll('.verify-user').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          try {
+            await AdminAPI.put(`/users/${this.dataset.id}/verify`);
+            render();
+          } catch (err) { alert(err.message); }
         });
       });
 

@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const validator = require('validator');
 const { getDB } = require('../database');
 const { authenticate, generateToken, generateRefreshToken, verifyRefreshToken, TOKEN_COOKIE_OPTS } = require('../middleware/auth');
+const { sendOTP, sendPasswordReset } = require('../email');
 
 const router = express.Router();
 
@@ -54,7 +55,7 @@ function requireVerified(req, res, next) {
   next();
 }
 
-router.post('/signup', authLimiter, (req, res) => {
+router.post('/signup', authLimiter, async (req, res) => {
   let { name, email, password } = req.body;
   name = sanitize(name);
   email = sanitize(email);
@@ -76,13 +77,12 @@ router.post('/signup', authLimiter, (req, res) => {
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   db.prepare('INSERT INTO users (id, name, email, password, otp, otp_expires) VALUES (?, ?, ?, ?, ?, ?)').run(id, name, email, hashed, otp, otpExpires);
-  console.log(`[DEV] OTP for ${email}: ${otp}`);
+  await sendOTP(email, otp);
   const token = generateToken(id);
   const refreshToken = generateRefreshToken(id);
   setTokenCookies(res, token, refreshToken);
 
-  const devOtp = process.env.NODE_ENV !== 'production' ? { devOtp: otp } : {};
-  res.json({ token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.', ...devOtp });
+  res.json({ token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.' });
 });
 
 router.post('/verify-otp', authenticate, otpLimiter, (req, res) => {
@@ -109,7 +109,7 @@ router.post('/verify-otp', authenticate, otpLimiter, (req, res) => {
   res.json({ message: 'Email verified successfully' });
 });
 
-router.post('/resend-otp', authenticate, otpLimiter, (req, res) => {
+router.post('/resend-otp', authenticate, otpLimiter, async (req, res) => {
   const db = getDB();
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -117,7 +117,7 @@ router.post('/resend-otp', authenticate, otpLimiter, (req, res) => {
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   db.prepare('UPDATE users SET otp = ?, otp_expires = ?, otp_attempts = 0 WHERE id = ?').run(otp, otpExpires, req.userId);
-  console.log(`[DEV] New OTP for ${user.email}: ${otp}`);
+  sendOTP(user.email, otp);
   res.json({ message: 'OTP resent' });
 });
 
@@ -138,7 +138,7 @@ router.post('/login', authLimiter, (req, res) => {
   res.json({ token, user: { id: user.id, name: user.name, email: user.email, verified: user.verified, role: user.role || 'user' } });
 });
 
-router.post('/forgot-password', otpLimiter, (req, res) => {
+router.post('/forgot-password', otpLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
@@ -148,10 +148,10 @@ router.post('/forgot-password', otpLimiter, (req, res) => {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     db.prepare('UPDATE users SET otp = ?, otp_expires = ?, otp_attempts = 0 WHERE id = ?').run(otp, otpExpires, user.id);
-    console.log(`[DEV] Password reset OTP for ${email}: ${otp}`);
+    sendPasswordReset(email, otp);
   }
 
-  res.json({ message: 'If the email exists, a reset link has been sent (check console in dev mode)' });
+  res.json({ message: 'If the email exists, a reset link has been sent' });
 });
 
 router.post('/reset-password', otpLimiter, (req, res) => {
