@@ -38,6 +38,16 @@ const globalLimiter = rateLimit({
 });
 app.use('/api/', globalLimiter);
 
+app.use('/admin', authenticate, (req, res, next) => {
+  const { getDB } = require('./database');
+  const db = getDB();
+  const user = db.prepare('SELECT role FROM users WHERE id = ?').get(req.userId);
+  if (!user || user.role !== 'admin') {
+    return res.status(403).send('Admin access required');
+  }
+  next();
+}, express.static(path.join(__dirname, 'public', 'admin')));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRoutes);
@@ -50,16 +60,6 @@ app.use('/api/courses', coursesRoutes);
 app.use('/api/pomodoro', pomodoroRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
-
-app.use('/admin', authenticate, (req, res, next) => {
-  const { getDB } = require('./database');
-  const db = getDB();
-  const user = db.prepare('SELECT role FROM users WHERE id = ?').get(req.userId);
-  if (!user || user.role !== 'admin') {
-    return res.status(403).send('Admin access required');
-  }
-  next();
-}, express.static(path.join(__dirname, 'public', 'admin')));
 
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: 'Not found' });
