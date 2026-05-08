@@ -4,3 +4,4 @@ hayati.db-wal
 hayati.db-shm
 .env
 *.log
+ngrok.exe
