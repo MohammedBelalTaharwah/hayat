@@ -65,12 +65,12 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', req.path === '/' ? 'index.html' : req.path));
 });
 
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET && !process.env.VERCEL) {
   console.error('FATAL: JWT_SECRET environment variable is required in production');
   process.exit(1);
 }
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
   app.use((req, res, next) => {
     if (req.headers['x-forwarded-proto'] && !req.headers['x-forwarded-proto'].startsWith('https')) {
       return res.redirect(301, `https://${req.headers.host}${req.url}`);

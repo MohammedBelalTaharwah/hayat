@@ -8,8 +8,8 @@ function getPool() {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/hayati',
       max: isServerless ? 1 : 10,
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 10000,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     });
   }
