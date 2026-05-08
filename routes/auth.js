@@ -77,12 +77,14 @@ router.post('/signup', authLimiter, async (req, res) => {
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   await db.query('INSERT INTO users (id, name, email, password, otp, otp_expires) VALUES ($1, $2, $3, $4, $5, $6)', [id, name, email, hashed, otp, otpExpires]);
-  await sendOTP(email, otp);
+  const emailSent = await sendOTP(email, otp);
   const token = generateToken(id);
   const refreshToken = generateRefreshToken(id);
   setTokenCookies(res, token, refreshToken);
 
-  res.json({ token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.' });
+  const response = { token, user: { id, name, email, role: 'user' }, message: 'Account created. Please verify your email.' };
+  if (!emailSent) response.devOtp = otp;
+  res.json(response);
 });
 
 router.post('/verify-otp', authenticate, otpLimiter, async (req, res) => {
@@ -115,8 +117,10 @@ router.post('/resend-otp', authenticate, otpLimiter, async (req, res) => {
   const otp = String(Math.floor(100000 + Math.random() * 900000));
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   await db.query('UPDATE users SET otp = $1, otp_expires = $2, otp_attempts = 0 WHERE id = $3', [otp, otpExpires, req.userId]);
-  sendOTP(user.email, otp);
-  res.json({ message: 'OTP resent' });
+  const emailSent = await sendOTP(user.email, otp);
+  const response = { message: 'OTP resent' };
+  if (!emailSent) response.devOtp = otp;
+  res.json(response);
 });
 
 router.post('/login', authLimiter, async (req, res) => {
@@ -139,15 +143,19 @@ router.post('/forgot-password', otpLimiter, async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).json({ error: 'Email required' });
 
+  let devOtp;
   const user = await db.get('SELECT id FROM users WHERE email = $1', [email]);
   if (user) {
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
     await db.query('UPDATE users SET otp = $1, otp_expires = $2, otp_attempts = 0 WHERE id = $3', [otp, otpExpires, user.id]);
-    sendPasswordReset(email, otp);
+    const emailSent = await sendPasswordReset(email, otp);
+    if (!emailSent) devOtp = otp;
   }
 
-  res.json({ message: 'If the email exists, a reset link has been sent' });
+  const response = { message: 'If the email exists, a reset link has been sent' };
+  if (devOtp) response.devOtp = devOtp;
+  res.json(response);
 });
 
 router.post('/reset-password', otpLimiter, async (req, res) => {

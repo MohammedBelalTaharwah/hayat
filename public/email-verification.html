@@ -91,7 +91,14 @@ document.getElementById('verify-btn').addEventListener('click', async () => {
 });
 document.getElementById('resend-btn').addEventListener('click', async () => {
   try {
-    await API.post('/auth/resend-otp', {});
+    const data = await API.post('/auth/resend-otp', {});
+    if (data.devOtp) sessionStorage.setItem('devOtp', data.devOtp);
+    const otp = sessionStorage.getItem('devOtp');
+    if (otp) {
+      document.getElementById('dev-otp').textContent = 'DEV MODE: Your OTP is ' + otp;
+      document.getElementById('dev-otp').classList.remove('hidden');
+      document.querySelectorAll('.otp-input').forEach((inp, i) => { inp.value = otp[i] || ''; });
+    }
     document.getElementById('success-msg').textContent = 'OTP resent! Check your email (console).';
     document.getElementById('success-msg').classList.remove('hidden');
   } catch (err) {
